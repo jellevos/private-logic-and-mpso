@@ -1,1 +1,0 @@
-Build the code using `cargo build --release`, then follow the help from the command line interface.
