@@ -1,5 +1,5 @@
 use crate::{Assistant, Leader};
-use sets_multisets::sets::{bloom_filter_indices, Set};
+use sets_multisets::{bloom_filters::bloom_filter_indices, sets::Set};
 use std::thread;
 
 pub fn mpsi_small(
