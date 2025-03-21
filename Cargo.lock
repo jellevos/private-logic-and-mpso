@@ -95,7 +95,7 @@ dependencies = [
 
 [[package]]
 name = "ec_mpso"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bincode",
  "curve25519-dalek",
@@ -266,9 +266,9 @@ dependencies = [
 
 [[package]]
 name = "sets_multisets"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "490ebca7a6d9865a7fc2d2beaf85127e1363d9ffad839b7363edf07ae78716fa"
+checksum = "e494774e8a315b9f2dd2ed3b3c60637bfe990b461ef8d0825e1983bc6d852927"
 dependencies = [
  "bytevec",
  "rand",
