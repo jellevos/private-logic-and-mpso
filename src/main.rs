@@ -13,11 +13,14 @@ use curve25519_dalek::scalar::Scalar;
 use rand::rngs::OsRng;
 use rand::seq::index::sample;
 use rand::Rng;
+use sets_multisets::bloom_filters::{gen_bloom_filter_params, gen_bloom_filter_params_log2, Argon2Hasher, Xxh3Hasher};
 use sets_multisets::sets::{gen_sets_with_intersection, gen_sets_with_union, Set};
 use std::cmp;
 use std::os::unix::net::UnixStream;
 use std::time::Instant;
 use structopt::StructOpt;
+
+type DefaultElementHasher = Xxh3Hasher;
 
 #[derive(StructOpt)]
 #[structopt(
@@ -79,6 +82,14 @@ enum Opt {
     },
     #[structopt(about = "Run a set of test cases")]
     Test,
+    #[structopt(about = "Benchmarks a few mitigations for approximate set intersections")]
+    BfMitigations {
+        n_parties: usize,
+        set_size_k: usize,
+        universe: usize,
+        fpr: f64,
+        mitigation: usize,
+    },
 }
 
 pub fn setup(party_count: usize) -> (Leader, Vec<Assistant>) {
@@ -218,6 +229,8 @@ fn main() {
         } => run_exact_set_union(n_parties, set_size_k, universe, divisions, print_result),
 
         Opt::Test => test_cases(),
+
+        Opt::BfMitigations { n_parties, set_size_k, universe, fpr, mitigation } => run_bf_mitigations(n_parties, set_size_k, universe, fpr, mitigation),
     }
 }
 
@@ -340,7 +353,7 @@ fn run_approx_set_intersection(
     );
     let (leader, assistants) = setup(n_parties);
     let now = Instant::now();
-    let result = mpsi_large(leader, assistants, party_sets, bin_count_m, hash_count_h);
+    let result = mpsi_large::<DefaultElementHasher>(leader, assistants, party_sets, bin_count_m, hash_count_h);
     println!("Took: {} ms", now.elapsed().as_millis());
     if print_result {
         println!("Result: {:?}", result);
@@ -500,7 +513,7 @@ fn test_cases() {
 
     println!("Large intersection");
     let (leader, assistants) = setup(3);
-    let result = mpsi_large(
+    let result = mpsi_large::<DefaultElementHasher>(
         leader,
         assistants,
         vec![
@@ -527,4 +540,44 @@ fn test_cases() {
         1000,
     );
     println!("{:?}", result);
+}
+
+fn run_bf_mitigations(
+    n_parties: usize,
+    set_size_k: usize,
+    universe: usize,
+    fpr: f64,
+    mitigation: usize,
+) {
+    println!(
+        "Performing a set intersection between {} parties with {} elements.",
+        n_parties, set_size_k
+    );
+    let party_sets = gen_sets_with_intersection(
+        n_parties,
+        set_size_k,
+        universe,
+        OsRng.gen_range(
+            cmp::max(
+                1,
+                (n_parties * set_size_k) as isize - (universe * (n_parties - 1)) as isize,
+            ) as usize..=set_size_k,
+        ),
+    );
+    let (leader, assistants) = setup(n_parties);
+
+    let (bin_count_m, hash_count_h) = match mitigation {
+        0 | 2 | 3 => gen_bloom_filter_params(fpr, set_size_k),
+        1 => gen_bloom_filter_params_log2(-160., set_size_k),
+        _ => panic!("Supported mitigation values: 0 (no mitigations), 1, 2, or 3."),
+    };
+
+    let now = Instant::now();
+    let result = match mitigation {
+        0 | 1 => mpsi_large::<DefaultElementHasher>(leader, assistants, party_sets, bin_count_m, hash_count_h),
+        2 => todo!(),
+        3 => mpsi_large::<Argon2Hasher>(leader, assistants, party_sets, bin_count_m, hash_count_h),
+        _ => panic!("Supported mitigation values: 0 (no mitigations), 1, 2, or 3."),
+    };
+    println!("Took: {} ms", now.elapsed().as_millis());
 }

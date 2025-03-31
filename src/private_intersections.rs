@@ -1,5 +1,5 @@
 use crate::{Assistant, Leader};
-use sets_multisets::{bloom_filters::bloom_filter_indices, sets::Set};
+use sets_multisets::{bloom_filters::{bloom_filter_indices, ElementHasher}, sets::Set};
 use std::thread;
 
 pub fn mpsi_small(
@@ -22,7 +22,7 @@ pub fn mpsi_small(
     Set::from_bitset(&leader_thread.join().unwrap())
 }
 
-pub fn mpsi_large(
+pub fn mpsi_large<H: ElementHasher>(
     mut leader: Leader,
     assistants: Vec<Assistant>,
     sets: Vec<Set>,
@@ -35,7 +35,7 @@ pub fn mpsi_large(
         let compositions: Vec<Vec<usize>> = leader_set
             .elements
             .iter()
-            .map(|element| bloom_filter_indices(element, bin_count, hash_count).collect())
+            .map(|element| bloom_filter_indices::<H>(element, bin_count, hash_count).collect())
             .collect();
         let result = leader.private_batched_composed_and(&compositions);
 
@@ -53,7 +53,7 @@ pub fn mpsi_large(
         .zip(set_iterator)
         .for_each(|(mut assistant, set)| {
             thread::spawn(move || {
-                assistant.private_batched_composed_and(&set.to_bloom_filter(bin_count, hash_count))
+                assistant.private_batched_composed_and(&set.to_bloom_filter::<H>(bin_count, hash_count))
             });
         });
 
