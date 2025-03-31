@@ -2,6 +2,7 @@ mod divide_conquer;
 mod private_intersections;
 mod private_logic;
 mod private_unions;
+mod oprf;
 
 use crate::divide_conquer::divide_and_conquer_or;
 use crate::private_intersections::{mpsi_large, mpsi_small};
