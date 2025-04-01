@@ -263,6 +263,7 @@ dependencies = [
  "hkdf",
  "rand",
  "sets_multisets",
+ "sha2",
  "structopt",
  "subtle",
  "voprf",

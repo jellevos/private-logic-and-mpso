@@ -39,7 +39,7 @@ pub fn encrypt(
 
     let c1s = randomness_1
         .iter()
-        .map(|r| (r * &RISTRETTO_BASEPOINT_TABLE))
+        .map(|r| (r * RISTRETTO_BASEPOINT_TABLE))
         .collect::<Vec<RistrettoPoint>>();
     let c2s = randomness_2
         .map(|r| (&r * public_key))
@@ -58,7 +58,7 @@ pub fn encrypt_unoptimized(
 
     let c1s = randomness
         .iter()
-        .map(|r| (r * &RISTRETTO_BASEPOINT_TABLE))
+        .map(|r| (r * RISTRETTO_BASEPOINT_TABLE))
         .collect::<Vec<RistrettoPoint>>();
     let c2s = randomness
         .iter()
@@ -180,7 +180,7 @@ impl Leader {
         let c1s_randomized: Vec<RistrettoPoint> = c1s_sum
             .iter()
             .zip(&factors)
-            .map(|(c1, r)| c1 + r * &RISTRETTO_BASEPOINT_TABLE)
+            .map(|(c1, r)| c1 + r * RISTRETTO_BASEPOINT_TABLE)
             .collect();
         let c1s_randomized_compressed: Vec<CompressedRistretto> =
             c1s_randomized.iter().map(|c| c.compress()).collect();

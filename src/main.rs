@@ -20,6 +20,7 @@ use std::cmp;
 use std::os::unix::net::UnixStream;
 use std::time::Instant;
 use structopt::StructOpt;
+use crate::private_intersections::mpsi_large_oprf;
 
 type DefaultElementHasher = Xxh3Hasher;
 
@@ -90,6 +91,8 @@ enum Opt {
         universe: usize,
         fpr: f64,
         mitigation: usize,
+        #[structopt(short, long)]
+        print_result: bool,
     },
 }
 
@@ -99,7 +102,7 @@ pub fn setup(party_count: usize) -> (Leader, Vec<Assistant>) {
         .collect();
     let partial_keys: Vec<CompressedRistretto> = secret_keys
         .iter()
-        .map(|sk| (sk * &RISTRETTO_BASEPOINT_TABLE).compress())
+        .map(|sk| (sk * RISTRETTO_BASEPOINT_TABLE).compress())
         .collect();
 
     let public_key = partial_keys
@@ -146,7 +149,7 @@ pub fn setup_unoptimized(party_count: usize) -> (Leader, Vec<Assistant>) {
         .collect();
     let partial_keys: Vec<CompressedRistretto> = secret_keys
         .iter()
-        .map(|sk| (sk * &RISTRETTO_BASEPOINT_TABLE).compress())
+        .map(|sk| (sk * RISTRETTO_BASEPOINT_TABLE).compress())
         .collect();
 
     let public_key = partial_keys
@@ -231,7 +234,7 @@ fn main() {
 
         Opt::Test => test_cases(),
 
-        Opt::BfMitigations { n_parties, set_size_k, universe, fpr, mitigation } => run_bf_mitigations(n_parties, set_size_k, universe, fpr, mitigation),
+        Opt::BfMitigations { n_parties, set_size_k, universe, fpr, mitigation, print_result } => run_bf_mitigations(n_parties, set_size_k, universe, fpr, mitigation, print_result),
     }
 }
 
@@ -549,6 +552,7 @@ fn run_bf_mitigations(
     universe: usize,
     fpr: f64,
     mitigation: usize,
+    print_result: bool,
 ) {
     println!(
         "Performing a set intersection between {} parties with {} elements.",
@@ -576,9 +580,12 @@ fn run_bf_mitigations(
     let now = Instant::now();
     let result = match mitigation {
         0 | 1 => mpsi_large::<DefaultElementHasher>(leader, assistants, party_sets, bin_count_m, hash_count_h),
-        2 => todo!(),
+        2 => mpsi_large_oprf(leader, assistants, party_sets, bin_count_m, hash_count_h),
         3 => mpsi_large::<Argon2Hasher>(leader, assistants, party_sets, bin_count_m, hash_count_h),
         _ => panic!("Supported mitigation values: 0 (no mitigations), 1, 2, or 3."),
     };
     println!("Took: {} ms", now.elapsed().as_millis());
+    if print_result {
+        println!("Result: {:?}", result);
+    }
 }
