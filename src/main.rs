@@ -1,10 +1,11 @@
 mod divide_conquer;
+mod oprf;
 mod private_intersections;
 mod private_logic;
 mod private_unions;
-mod oprf;
 
 use crate::divide_conquer::divide_and_conquer_or;
+use crate::private_intersections::mpsi_large_oprf;
 use crate::private_intersections::{mpsi_large, mpsi_small};
 use crate::private_logic::{mpa, mpco, mpo, mpo_unoptimized, Assistant, Leader};
 use crate::private_unions::{mpsu_large, mpsu_small};
@@ -14,13 +15,14 @@ use curve25519_dalek::scalar::Scalar;
 use rand::rngs::OsRng;
 use rand::seq::index::sample;
 use rand::Rng;
-use sets_multisets::bloom_filters::{gen_bloom_filter_params, gen_bloom_filter_params_log2, Argon2Hasher, Xxh3Hasher};
+use sets_multisets::bloom_filters::{
+    gen_bloom_filter_params, gen_bloom_filter_params_log2, Argon2Hasher, Xxh3Hasher,
+};
 use sets_multisets::sets::{gen_sets_with_intersection, gen_sets_with_union, Set};
 use std::cmp;
 use std::os::unix::net::UnixStream;
 use std::time::Instant;
 use structopt::StructOpt;
-use crate::private_intersections::mpsi_large_oprf;
 
 type DefaultElementHasher = Xxh3Hasher;
 
@@ -234,7 +236,21 @@ fn main() {
 
         Opt::Test => test_cases(),
 
-        Opt::BfMitigations { n_parties, set_size_k, universe, fpr, mitigation, print_result } => run_bf_mitigations(n_parties, set_size_k, universe, fpr, mitigation, print_result),
+        Opt::BfMitigations {
+            n_parties,
+            set_size_k,
+            universe,
+            fpr,
+            mitigation,
+            print_result,
+        } => run_bf_mitigations(
+            n_parties,
+            set_size_k,
+            universe,
+            fpr,
+            mitigation,
+            print_result,
+        ),
     }
 }
 
@@ -357,7 +373,13 @@ fn run_approx_set_intersection(
     );
     let (leader, assistants) = setup(n_parties);
     let now = Instant::now();
-    let result = mpsi_large::<DefaultElementHasher>(leader, assistants, party_sets, bin_count_m, hash_count_h);
+    let result = mpsi_large::<DefaultElementHasher>(
+        leader,
+        assistants,
+        party_sets,
+        bin_count_m,
+        hash_count_h,
+    );
     println!("Took: {} ms", now.elapsed().as_millis());
     if print_result {
         println!("Result: {:?}", result);
@@ -579,7 +601,13 @@ fn run_bf_mitigations(
 
     let now = Instant::now();
     let result = match mitigation {
-        0 | 1 => mpsi_large::<DefaultElementHasher>(leader, assistants, party_sets, bin_count_m, hash_count_h),
+        0 | 1 => mpsi_large::<DefaultElementHasher>(
+            leader,
+            assistants,
+            party_sets,
+            bin_count_m,
+            hash_count_h,
+        ),
         2 => mpsi_large_oprf(leader, assistants, party_sets, bin_count_m, hash_count_h),
         3 => mpsi_large::<Argon2Hasher>(leader, assistants, party_sets, bin_count_m, hash_count_h),
         _ => panic!("Supported mitigation values: 0 (no mitigations), 1, 2, or 3."),

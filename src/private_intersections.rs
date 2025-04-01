@@ -1,5 +1,11 @@
-use crate::{oprf::{hash_leader_elements_leader, hash_leader_elements_assistant}, Assistant, Leader};
-use sets_multisets::{bloom_filters::{bloom_filter_indices, ElementHasher}, sets::Set};
+use crate::{
+    oprf::{hash_leader_elements_assistant, hash_leader_elements_leader},
+    Assistant, Leader,
+};
+use sets_multisets::{
+    bloom_filters::{bloom_filter_indices, ElementHasher},
+    sets::Set,
+};
 use std::thread;
 
 pub fn mpsi_small(
@@ -53,7 +59,8 @@ pub fn mpsi_large<H: ElementHasher>(
         .zip(set_iterator)
         .for_each(|(mut assistant, set)| {
             thread::spawn(move || {
-                assistant.private_batched_composed_and(&set.to_bloom_filter::<H>(bin_count, hash_count))
+                assistant
+                    .private_batched_composed_and(&set.to_bloom_filter::<H>(bin_count, hash_count))
             });
         });
 
@@ -74,7 +81,12 @@ pub fn mpsi_large_oprf(
     // This is hacky... We let the leader run the OPRFs on each set and then just transfer the indices to the assistants.
     // This is not how the protocol runs in real life: there, each assistant runs the protocol for itself.
     let leader_thread = thread::spawn(move || {
-        (sets.into_iter().map(|set| hash_leader_elements_leader(&mut leader, set, bin_count, hash_count)).collect::<Vec<_>>(), leader)
+        (
+            sets.into_iter()
+                .map(|set| hash_leader_elements_leader(&mut leader, set, bin_count, hash_count))
+                .collect::<Vec<_>>(),
+            leader,
+        )
     });
     let assistant_threads: Vec<_> = assistants
         .into_iter()
@@ -88,7 +100,10 @@ pub fn mpsi_large_oprf(
         })
         .collect();
 
-    let assistants: Vec<Assistant> = assistant_threads.into_iter().map(|assistant_thread| assistant_thread.join().unwrap()).collect();
+    let assistants: Vec<Assistant> = assistant_threads
+        .into_iter()
+        .map(|assistant_thread| assistant_thread.join().unwrap())
+        .collect();
     let (indices_per_party, mut leader) = leader_thread.join().unwrap();
 
     // Now run the Bloom filter-based MPSI
