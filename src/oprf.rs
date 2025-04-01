@@ -68,7 +68,7 @@ impl<'a> OprfLeader<'a> {
                         .collect::<Vec<_>>(),
                 )
                 .unwrap();
-                assistant.write_all(&mut message);
+                assistant.write_all(&mut message).unwrap();
 
                 client_blind_results
             })
@@ -145,7 +145,7 @@ impl<'a> OprfAssistant<'a> {
             })
             .collect();
 
-        bincode::serialize_into(&mut self.assistant.stream, &replies);
+        bincode::serialize_into(&mut self.assistant.stream, &replies).unwrap();
     }
 }
 
