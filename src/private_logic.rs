@@ -1,8 +1,8 @@
-use crate::OsRng;
 use curve25519_dalek::constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE};
 use curve25519_dalek::ristretto::{CompressedRistretto, RistrettoBasepointTable, RistrettoPoint};
 use curve25519_dalek::scalar::Scalar;
 use curve25519_dalek::traits::{Identity, IsIdentity};
+use rand::thread_rng;
 use std::io::Write;
 use std::iter::Sum;
 use std::os::unix::net::UnixStream;
@@ -27,9 +27,9 @@ pub fn encrypt(
     public_key: &RistrettoBasepointTable,
 ) -> (Vec<RistrettoPoint>, Vec<RistrettoPoint>) {
     let randomness_1: Vec<Scalar> = (0..bits.len())
-        .map(|_| Scalar::random(&mut OsRng))
+        .map(|_| Scalar::random(&mut thread_rng()))
         .collect();
-    let randomness_1_prime = (0..bits.len()).map(|_| Scalar::random(&mut OsRng));
+    let randomness_1_prime = (0..bits.len()).map(|_| Scalar::random(&mut thread_rng()));
 
     let randomness_2 = bits
         .iter()
@@ -53,7 +53,7 @@ pub fn encrypt_unoptimized(
     public_key: &RistrettoBasepointTable,
 ) -> (Vec<RistrettoPoint>, Vec<RistrettoPoint>) {
     let randomness: Vec<Scalar> = (0..bits.len())
-        .map(|_| Scalar::random(&mut OsRng))
+        .map(|_| Scalar::random(&mut thread_rng()))
         .collect();
 
     let c1s = randomness
@@ -115,7 +115,7 @@ impl Leader {
             })
             .collect();
 
-        let factors: Vec<Scalar> = (0..bit_count).map(|_| Scalar::random(&mut OsRng)).collect();
+        let factors: Vec<Scalar> = (0..bit_count).map(|_| Scalar::random(&mut thread_rng())).collect();
 
         let c1s_multiplied: Vec<RistrettoPoint> =
             c1s_sum.iter().zip(&factors).map(|(c1, r)| r * c1).collect();
@@ -175,7 +175,7 @@ impl Leader {
             })
             .collect();
 
-        let factors: Vec<Scalar> = (0..bit_count).map(|_| Scalar::random(&mut OsRng)).collect();
+        let factors: Vec<Scalar> = (0..bit_count).map(|_| Scalar::random(&mut thread_rng())).collect();
 
         let c1s_randomized: Vec<RistrettoPoint> = c1s_sum
             .iter()
@@ -300,7 +300,7 @@ impl Leader {
 
         let bit_count = ciphertexts[0].0.len();
 
-        let factors: Vec<Scalar> = (0..bit_count).map(|_| Scalar::random(&mut OsRng)).collect();
+        let factors: Vec<Scalar> = (0..bit_count).map(|_| Scalar::random(&mut thread_rng())).collect();
 
         let c1s_sum: Vec<RistrettoPoint> = (0..bit_count)
             .zip(&factors)
@@ -409,7 +409,7 @@ impl Assistant {
             bincode::deserialize_from(&self.stream).unwrap();
 
         let bit_count = c1s.len();
-        let factors: Vec<Scalar> = (0..bit_count).map(|_| Scalar::random(&mut OsRng)).collect();
+        let factors: Vec<Scalar> = (0..bit_count).map(|_| Scalar::random(&mut thread_rng())).collect();
 
         let c1s_multiplied: Vec<RistrettoPoint> = c1s
             .iter()
@@ -449,7 +449,7 @@ impl Assistant {
             bincode::deserialize_from(&self.stream).unwrap();
 
         let bit_count = c1s.len();
-        let factors: Vec<Scalar> = (0..bit_count).map(|_| Scalar::random(&mut OsRng)).collect();
+        let factors: Vec<Scalar> = (0..bit_count).map(|_| Scalar::random(&mut thread_rng())).collect();
 
         let c1s_multiplied: Vec<RistrettoPoint> = c1s
             .iter()
@@ -523,7 +523,7 @@ impl Leader {
             .collect();
 
         let factors: Vec<Scalar> = (0..compositions.len())
-            .map(|_| Scalar::random(&mut OsRng))
+            .map(|_| Scalar::random(&mut thread_rng()))
             .collect();
 
         let c1s_multiplied: Vec<RistrettoPoint> =
