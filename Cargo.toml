@@ -10,7 +10,7 @@ curve25519-dalek = { version = "4.0.0-pre.1", features = ["serde"] }
 rand = "0.8"
 subtle = "2.4"
 bincode = "1.3"
-sets_multisets = "0.11.2"
+sets_multisets = "0.12.1"
 structopt = "0.3"
 voprf = "0.5"
 hkdf = "0.12.4"

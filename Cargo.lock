@@ -84,9 +84,9 @@ dependencies = [
 
 [[package]]
 name = "blake3"
-version = "1.8.0"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34a796731680be7931955498a16a10b2270c7762963d5d570fdbfe02dcbf314f"
+checksum = "389a099b34312839e16420d499a9cad9650541715937ffbdd40d36f49e77eeb3"
 dependencies = [
  "arrayref",
  "arrayvec",
@@ -542,9 +542,9 @@ dependencies = [
 
 [[package]]
 name = "sets_multisets"
-version = "0.11.2"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4a716e7f3697d0ead7c40c16fd2d98d1ec2df5eeea52729b3fc413cf5768954"
+checksum = "a60e44c3f439860ec50c5840bd55fe41d5030e710e2359df8fbc4b953cd4192a"
 dependencies = [
  "argon2",
  "blake3",
